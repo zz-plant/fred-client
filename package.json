@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "description": "FRED and ALFRED client: CSV export and JSON API behind one interface, vintages, missing-value handling, key redaction, retry budget, circuit breaker.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zz-plant/fred-client.git"
+  },
+  "homepage": "https://github.com/zz-plant/fred-client#readme",
+  "bugs": "https://github.com/zz-plant/fred-client/issues",
   "author": "Kanav Jain",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,9 +20,26 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist", "src", "README.md", "LICENSE"],
-  "keywords": ["fred", "alfred", "stlouisfed", "economic-data", "time-series", "macro", "api-client", "vintage"],
-  "engines": { "bun": ">=1.1", "node": ">=20" },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "fred",
+    "alfred",
+    "stlouisfed",
+    "economic-data",
+    "time-series",
+    "macro",
+    "api-client",
+    "vintage"
+  ],
+  "engines": {
+    "bun": ">=1.1",
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
