@@ -1,7 +1,7 @@
 {
   "name": "fred-client",
   "version": "0.1.0",
-  "description": "FRED and ALFRED client: CSV export and JSON API behind one interface, vintages, missing-value handling, key redaction, retry budget, circuit breaker.",
+  "description": "TypeScript client for FRED economic data. Works without an API key, supports historical revisions, no dependencies.",
   "license": "MIT",
   "repository": {
     "type": "git",
