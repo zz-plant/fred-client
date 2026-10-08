@@ -112,6 +112,24 @@ export const parseFredCsvRows = (csv: string): FredRow[] =>
       return Number.isFinite(value) ? [{ date, value }] : [];
     });
 
+/**
+ * Every row of a CSV export as date to value, in file order, with a missing observation
+ * kept as `null` rather than dropped: a caller aligning several series on a common date
+ * needs to see the dates one of them skipped.
+ */
+export const parseFredCsvSeries = (csv: string): Map<string, number | null> => {
+  const values = new Map<string, number | null>();
+  const [header, ...rows] = csv.trim().split(/\r?\n/);
+  if (!header) return values;
+  for (const row of rows) {
+    const [date, raw] = row.split(",");
+    if (!date) continue;
+    const value = isMissingFredValue(raw) ? null : Number(raw);
+    values.set(date, value !== null && Number.isFinite(value) ? value : null);
+  }
+  return values;
+};
+
 /** The API's JSON body, reduced to the same rows the CSV parser produces. */
 export const parseFredApiObservations = (payload: unknown): FredRow[] => {
   if (!isRecord(payload)) throw new Error("FRED API returned no observations payload");
@@ -166,12 +184,18 @@ export interface RequestOptions extends Omit<RetryOptions, "isRetryable" | "now"
   asOf?: string | undefined;
   /** Overrides the client's key. `null` forces the CSV path. */
   apiKey?: string | null | undefined;
+  /** Overrides the client's `fetch` for this request, e.g. a fixture in one test. The breaker stays shared. */
+  fetch?: FetchLike | undefined;
 }
 
 export interface FredClientOptions {
   fetch?: FetchLike | undefined;
-  /** Default: `resolveFredApiKey()` at call time. `null` disables the API path. */
-  apiKey?: string | null | undefined;
+  /**
+   * Default: `resolveFredApiKey()` at call time. `null` disables the API path. A function
+   * is called on every request, for a key that only exists once a request is running
+   * (a Worker binding) or that your own settings layer resolves.
+   */
+  apiKey?: string | null | (() => string | null) | undefined;
   userAgent?: string | undefined;
   timeoutMs?: number | undefined;
   retry?: Omit<RetryOptions, "isRetryable" | "now"> | undefined;
@@ -220,6 +244,7 @@ export const createFredClient = (config: FredClientOptions = {}): FredClient => 
 
   const resolveKey = (options?: RequestOptions): string | null => {
     if (options?.apiKey !== undefined) return options.apiKey;
+    if (typeof config.apiKey === "function") return config.apiKey();
     if (config.apiKey !== undefined) return config.apiKey;
     return resolveFredApiKey();
   };
@@ -259,7 +284,7 @@ export const createFredClient = (config: FredClientOptions = {}): FredClient => 
 
   const request = (url: string, accept: string, options: RequestOptions | undefined, remainingMs: number) =>
     fetchWithTimeout(
-      fetcher,
+      options?.fetch ?? fetcher,
       url,
       { ...config.requestInit, headers: { ...headers(accept) } },
       Math.min(options?.timeoutMs ?? config.timeoutMs ?? DEFAULT_TIMEOUT_MS, remainingMs),

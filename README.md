@@ -156,7 +156,7 @@ const fred = createFredClient({
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `apiKey` | Read from `FRED_API_KEY` | Your key. `null` means always use the CSV download. |
+| `apiKey` | Read from `FRED_API_KEY` | Your key. `null` means always use the CSV download. A function is called before every request, which suits a key that only exists while a request runs, such as a Worker binding. |
 | `fetch` | `globalThis.fetch` | The function used for requests. Pass a fake one in tests. |
 | `userAgent` | `fred-client/0.1` | Sent with every request so FRED can tell which app is calling. |
 | `timeoutMs` | `8000` | Longest wait for a single attempt. |
@@ -178,6 +178,7 @@ Every option in the second argument of `fetchRows` is optional:
 | `lookbackDays` | Return only this many days of history. |
 | `asOf` | A `YYYY-MM-DD` date. Return the series as it stood on that date. Needs a key. |
 | `apiKey` | Use a different key for this request, or `null` to force the CSV download. |
+| `fetch` | Use a different `fetch` for this request, such as a fake one in a single test. Failures still count against the client's breaker. |
 | `timeoutMs`, `attempts`, `backoffMs`, `budgetMs` | Override the client's settings for this request. |
 
 ### Where the key comes from
@@ -212,6 +213,7 @@ If you don't pass `apiKey`, the client looks for it each time it makes a request
 | Function | Purpose |
 | --- | --- |
 | `parseFredCsvRows(csv)` | Turns CSV text into rows, dropping missing values. |
+| `parseFredCsvSeries(csv)` | Turns CSV text into a `Map` from date to value, keeping a missing value as `null`. Use it to line several series up by date. |
 | `parseFredApiObservations(json)` | Turns an API response into rows, dropping missing values. |
 | `isMissingFredValue(text)` | `true` for an empty field, whitespace, or `.`. |
 | `redactFredApiKey(text)` | Replaces any `api_key=…` with `api_key=REDACTED`. |

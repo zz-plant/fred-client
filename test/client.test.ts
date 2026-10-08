@@ -272,6 +272,31 @@ describe("fetchRows", () => {
   });
 });
 
+describe("per-request settings", () => {
+  it("uses a per-request fetch, and its failures count against the client's one breaker", async () => {
+    const { fetcher: unused, calls: unusedCalls } = recording(() => new Response(CSV));
+    const client = createFredClient({ fetch: unused });
+    const { fetcher: failing } = recording(() => new Response("down", { status: 503 }));
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await assert.rejects(client.fetchCsv("DGS10", { ...quiet, attempts: 1, fetch: failing }));
+    }
+    assert.equal(unusedCalls.length, 0);
+    assert.equal(client.breakerState().open, true);
+    await assert.rejects(client.fetchCsv("DGS10", quiet), FredCircuitOpenError);
+  });
+
+  it("calls a key function on every request, so a key that appears later is used", async () => {
+    const { fetcher, calls } = recording((url) => (url.startsWith(FRED_API_BASE_URL) ? new Response(API_BODY) : new Response(CSV)));
+    let key: string | null = null;
+    const client = createFredClient({ fetch: fetcher, apiKey: () => key });
+    await client.fetchRows("DGS10", quiet);
+    assert.ok(calls[0]?.startsWith(FRED_CSV_BASE_URL));
+    key = "late-key";
+    await client.fetchRows("DGS10", quiet);
+    assert.equal(new URL(calls[1] ?? "").searchParams.get("api_key"), "late-key");
+  });
+});
+
 describe("resolveFredApiKey", () => {
   it("prefers a global binding over the environment, trimmed", () => {
     const previous = process.env.FRED_API_KEY;

@@ -7,6 +7,7 @@ import {
   latestYearOverYear,
   parseFredApiObservations,
   parseFredCsvRows,
+  parseFredCsvSeries,
   withRetry,
   yearOverYearPoints,
 } from "../src/index.js";
@@ -48,6 +49,23 @@ describe("missing observations", () => {
     assert.throws(() => parseFredApiObservations({ error_message: "bad api_key=abc here" }), /FRED API error: bad api_key=REDACTED here/);
     assert.throws(() => parseFredApiObservations(null), /no observations payload/);
     assert.throws(() => parseFredApiObservations({}), /no observations array/);
+  });
+});
+
+describe("parseFredCsvSeries", () => {
+  it("keeps every date in file order, with a missing or unreadable value as null", () => {
+    const series = parseFredCsvSeries(buildCsv(["2024-01-01,4.00", "2024-01-02,", "2024-01-03,.", "2024-01-04,n/a", "2024-01-05,4.05"]));
+    assert.deepEqual([...series], [
+      ["2024-01-01", 4],
+      ["2024-01-02", null],
+      ["2024-01-03", null],
+      ["2024-01-04", null],
+      ["2024-01-05", 4.05],
+    ]);
+  });
+
+  it("returns an empty map for an empty body", () => {
+    assert.equal(parseFredCsvSeries("").size, 0);
   });
 });
 
