@@ -42,17 +42,6 @@ latestObservation(rows);
 
 ## Install
 
-> [!NOTE]
-> This package is not on npm yet. Until the first release, install it from GitHub:
->
-> ```bash
-> npm install github:zz-plant/fred-client
-> # or
-> bun add github:zz-plant/fred-client
-> ```
-
-After the first release:
-
 ```bash
 npm install fred-client
 # or
