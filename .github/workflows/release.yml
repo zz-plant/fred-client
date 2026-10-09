@@ -1,0 +1,71 @@
+name: Release
+
+# Pushing a v* tag publishes that version to npm. The tag and package.json
+# have to agree, and the checks have to pass, or nothing is published.
+#
+# Publishes with npm trusted publishing: npm checks this workflow's identity,
+# so no token is stored. One-time setup, after the first publish by hand: on
+# npmjs.com open the package's Settings > Trusted publisher, choose GitHub
+# Actions, and enter zz-plant / fred-client / release.yml. An NPM_TOKEN
+# secret, if one is set, still works as a fallback.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)publish, e.g. v0.1.0'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  npm:
+    if: ${{ github.repository_owner == 'zz-plant' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # --provenance signs the package with the workflow's identity.
+      id-token: write
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: bun install --frozen-lockfile
+
+      - name: Check the version matches the tag
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "package.json is $PKG but the tag is $TAG. Bump one of them."
+            exit 1
+          fi
+
+      # prepublishOnly runs the typecheck, tests and build before packing.
+      - name: Publish fred-client
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Node's npm, not the bun-backed npm that setup-bun puts first in
+          # PATH: bun's cannot do the OIDC exchange trusted publishing needs.
+          NPM="$(dirname "$(which node)")/npm"
+          # Trusted publishing needs npm 11.5.1 or later; Node 22 ships npm 10.
+          "$NPM" install -g npm@^11.5.1
+          VERSION="$(node -p "require('./package.json').version")"
+          if "$NPM" view "fred-client@$VERSION" version >/dev/null 2>&1; then
+            echo "fred-client@$VERSION is already on npm; nothing to publish."
+            exit 0
+          fi
+          "$NPM" publish --provenance --access public
