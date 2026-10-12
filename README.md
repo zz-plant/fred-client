@@ -16,19 +16,7 @@ latestObservation(rows);
 
 `DGS10` is the 10-year US Treasury yield. Every series has an id like this, shown on its FRED page.
 
-## Contents
 
-- [Features](#features)
-- [Install](#install)
-- [Quick start](#quick-start)
-- [Getting data as it was known on a past date](#getting-data-as-it-was-known-on-a-past-date)
-- [How requests behave](#how-requests-behave)
-- [Configuration](#configuration)
-- [API](#api)
-- [How it compares](#how-it-compares)
-- [Limitations](#limitations)
-- [Development](#development)
-- [License](#license)
 
 ## Features
 
