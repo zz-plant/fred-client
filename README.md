@@ -1,6 +1,8 @@
 # fred-client
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/fred-client?style=flat-square)](https://www.npmjs.com/package/fred-client)
+[![Bun](https://img.shields.io/badge/bun-%3E%3D1.3-black?style=flat-square&logo=bun&logoColor=white)](https://bun.sh)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
 Fetch economic data from [FRED](https://fred.stlouisfed.org/), the St. Louis Fed's free database of more than 800,000 US and international time series, including interest rates, inflation, and unemployment. Written in TypeScript with no dependencies. It works with or without an API key.
 
@@ -227,6 +229,15 @@ If you need search, categories, releases, sources, or tags, use node-fred or fre
 - **Series observations only.** Search, categories, releases, and tags are not covered.
 - **One vintage per request.** `asOf` fetches the series as of a single date. Comparing many vintages takes one request each.
 - **No unit or frequency conversion.** FRED's API can convert units or average to a lower frequency on its side. This client doesn't expose those options yet.
+
+## Structure
+
+```
+fred-client/
+├── src/         # FRED API client, XML parser & observation utilities
+├── test/        # Offline fixture-backed test suite
+└── package.json
+```
 
 ## Development
 
