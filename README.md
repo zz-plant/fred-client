@@ -30,10 +30,12 @@ latestObservation(rows);
 
 ## Install
 
+Not published to npm. To use it, build it and install the tarball:
+
 ```bash
-npm install fred-client
-# or
-bun add fred-client
+git clone https://github.com/zz-plant/fred-client.git && cd fred-client
+bun install && bun run build && npm pack
+npm install ../fred-client/fred-client-0.1.0.tgz   # from your project
 ```
 
 ## Quick start
